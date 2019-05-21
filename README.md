@@ -1,9 +1,20 @@
 # lslidar_c16
 
-## version track
-Author: Yutong
+### Instructions
+Make sure you have the device's correct IP.
+To start the driver, use:
 
-### ver1.1  Yutong
+```
+roslaunch lslidar_c16_decoder lslidar_c16.launch
+```
+
+## version track
+
+### ver1.2 David Portugal, University of Coimbra
+Changes in the pkg to support the migration to ROS Melodic (issue with the "pluginlib" solved)
+Requires "pluginlib" package in the workspace  (https://github.com/ros/pluginlib)
+
+### ver1.1  Yutong, LeiShen
 Using new message type to distinguish different channel data
 topic name: scan_channel
 topic type: LslidarC16Layer
@@ -13,8 +24,7 @@ Usage: rostopic echo /scan_channel  will output all 16 channels data
 Example: There is an example script to show you how to obtain each channel data, located at /lslidar_c16_decoder/scripts/Test_MultiChannel.py
 	 You will need python package numpy and matplotlib.pyplot(optional) to fully run this script
 
-
-### ver1.05 Yutong
+### ver1.05 Yutong, LeiShen
 Using rostopic to select the channel you wish to output
 topic name: layer_num
 topic type: std_msgs/Int8

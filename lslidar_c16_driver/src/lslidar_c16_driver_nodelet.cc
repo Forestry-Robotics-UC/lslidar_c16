@@ -1,30 +1,30 @@
-/*
- * This file is part of lslidar_c16 driver.
- *
- * The driver is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The driver is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with the driver.  If not, see <http://www.gnu.org/licenses/>.
- */
+/***************************************************************************
+Copyright 2018 The Leishen Authors. All Rights Reserved                     /
+                                                                            /
+Licensed under the Apache License, Version 2.0 (the "License");             /
+you may not use this file except in compliance with the License.            /
+You may obtain a copy of the License at                                     /
+                                                                            /
+    http://www.apache.org/licenses/LICENSE-2.0                              /
+                                                                            /
+Unless required by applicable law or agreed to in writing, software         /
+distributed under the License is distributed on an "AS IS" BASIS,           /
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    /
+See the License for the specific language governing permissions and         /
+limitations under the License.                                              /
+****************************************************************************/
 
 #include <string>
 #include <boost/thread.hpp>
 
 #include <ros/ros.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <nodelet/nodelet.h>
 
 #include <lslidar_c16_driver/lslidar_c16_driver_nodelet.h>
 
-
+namespace apollo {
+namespace drivers {
 namespace lslidar_c16_driver
 {
 
@@ -73,9 +73,16 @@ void LslidarC16DriverNodelet::devicePoll()
 }
 
 } // namespace lslidar_driver
-
+}
+}
 // Register this plugin with pluginlib.  Names must match nodelet_lslidar.xml.
 //
 // parameters are: package, class name, class type, base class type
-PLUGINLIB_DECLARE_CLASS(lslidar_c16_driver, LslidarC16DriverNodelet,
-                        lslidar_c16_driver::LslidarC16DriverNodelet, nodelet::Nodelet);
+
+//Before:
+//PLUGINLIB_DECLARE_CLASS(lslidar_c16_driver, LslidarC16DriverNodelet,
+//                        apollo::drivers::lslidar_c16_driver::LslidarC16DriverNodelet, 
+//                        nodelet::Nodelet);
+
+//After (David Portugal):
+PLUGINLIB_EXPORT_CLASS(apollo::drivers::lslidar_c16_driver::LslidarC16DriverNodelet, nodelet::Nodelet);

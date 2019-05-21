@@ -1,19 +1,18 @@
-/*
- * This file is part of lslidar_c16 driver.
- *
- * The driver is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * The driver is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with the driver.  If not, see <http://www.gnu.org/licenses/>.
- */
+/***************************************************************************
+Copyright 2018 The Leishen Authors. All Rights Reserved                     /
+                                                                            /
+Licensed under the Apache License, Version 2.0 (the "License");             /
+you may not use this file except in compliance with the License.            /
+You may obtain a copy of the License at                                     /
+                                                                            /
+    http://www.apache.org/licenses/LICENSE-2.0                              /
+                                                                            /
+Unless required by applicable law or agreed to in writing, software         /
+distributed under the License is distributed on an "AS IS" BASIS,           /
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.    /
+See the License for the specific language governing permissions and         /
+limitations under the License.                                              /
+****************************************************************************/
 
 #include <string>
 #include <cmath>
@@ -30,13 +29,18 @@
 
 #include <lslidar_c16_driver/lslidar_c16_driver.h>
 
+namespace apollo {
+namespace drivers {
 namespace lslidar_c16_driver {
 
 LslidarC16Driver::LslidarC16Driver(
         ros::NodeHandle& n, ros::NodeHandle& pn):
     nh(n),
     pnh(pn),
-    socket_id(-1){
+    socket_id(-1),
+    GPSStableTS(0),
+    GPSCountingTS(0),
+    last_FPGA_ts(0){
     return;
 }
 
@@ -109,6 +113,9 @@ bool LslidarC16Driver::openUDPPort() {
 }
 
 bool LslidarC16Driver::initialize() {
+    
+    this->initTimeStamp();
+
     if (!loadParameters()) {
         ROS_ERROR("Cannot load all required ROS parameters...");
         return false;
@@ -187,9 +194,6 @@ int LslidarC16Driver::getPacket(
         ssize_t nbytes = recvfrom(socket_id, &packet->data[0], PACKET_SIZE,  0,
                 (sockaddr*) &sender_address, &sender_address_len);
 
-//        ROS_DEBUG_STREAM("incomplete lslidar packet read: "
-//                         << nbytes << " bytes");
-
         if (nbytes < 0)
         {
             if (errno != EWOULDBLOCK)
@@ -209,16 +213,16 @@ int LslidarC16Driver::getPacket(
             else
                 break; //done
         }
-
-
-
     }
 
+    this->getFPGA_GPSTimeStamp(packet);
 
     // Average the times at which we begin and end reading.  Use that to
     // estimate when the scan occurred.
-    double time2 = ros::Time::now().toSec();
-    packet->stamp = ros::Time((time2 + time1) / 2.0);
+    // Comment out following two lines to use GPS provided time instead
+    //double time2 = ros::Time::now().toSec();
+    //packet->stamp = ros::Time((time2 + time1) / 2.0);
+    packet->stamp = this->timeStamp;
 
     return 0;
 }
@@ -250,7 +254,7 @@ bool LslidarC16Driver::polling()
     }
 
     // publish message using time of last packet read
-    ROS_DEBUG("Publishing a full lslidar scan.");
+    // ROS_DEBUG("Publishing a full lslidar scan.");
     packet_pub.publish(*packet);
 
     // notify diagnostics that a message has been published, updating
@@ -261,4 +265,95 @@ bool LslidarC16Driver::polling()
     return true;
 }
 
+void LslidarC16Driver::initTimeStamp(void)
+{
+    int i;
+
+    for(i = 0;i < 10;i ++)
+    {
+        this->packetTimeStamp[i] = 0;
+    }
+    this->pointcloudTimeStamp = 0;
+
+    this->timeStamp = ros::Time(0.0);
+}
+
+void LslidarC16Driver::getFPGA_GPSTimeStamp(lslidar_c16_msgs::LslidarC16PacketPtr &packet)
+{
+    unsigned char head2[] = {packet->data[0],packet->data[1],packet->data[2],packet->data[3]};
+
+    if(head2[0] == 0xA5 && head2[1] == 0xFF)
+    {
+        if(head2[2] == 0x00 && head2[3] == 0x5A)
+        {   
+            this->packetTimeStamp[4] = packet->data[41];
+            this->packetTimeStamp[5] = packet->data[40];
+            this->packetTimeStamp[6] = packet->data[39];
+            this->packetTimeStamp[7] = packet->data[38];
+            this->packetTimeStamp[8] = packet->data[37];
+            this->packetTimeStamp[9] = packet->data[36];
+
+            cur_time.tm_sec = this->packetTimeStamp[4];
+            cur_time.tm_min = this->packetTimeStamp[5];
+            cur_time.tm_hour = this->packetTimeStamp[6];
+            cur_time.tm_mday = this->packetTimeStamp[7];
+            cur_time.tm_mon = this->packetTimeStamp[8]-1;
+            cur_time.tm_year = this->packetTimeStamp[9]+2000-1900;
+            this->pointcloudTimeStamp = static_cast<uint64_t>(timegm(&cur_time));
+
+            if (GPSCountingTS != this->pointcloudTimeStamp)
+            {
+                cnt_gps_ts = 0;
+                GPSCountingTS = this->pointcloudTimeStamp;
+            }
+            else if (cnt_gps_ts == 1)
+            {
+                GPSStableTS = GPSCountingTS;
+
+            }
+            else
+            {
+                cnt_gps_ts ++;
+
+            }
+
+        }
+    }
+    else if(head2[0] == 0xFF && head2[1] == 0xEE)
+    {
+        // unsigned int total_us = (packet->data[1200]) | (packet->data[1201] << 8) | (packet->data[1202] << 16) | (packet->data[1203] << 24);
+        
+        // No need when FPGA timestamp is correct
+        // us = total_us % 1000;
+        // ms = total_us / 1000;
+	    // if(ms >= 1000)
+		// ROS_INFO("ms:%ju",ms);
+        // if(ms > 1000)
+        // {
+        //     ms %= 1000;
+        // }
+        // total_us = ms * 1000 + us;
+
+        uint64_t packet_timestamp;
+        packet_timestamp = (packet->data[1200]  +
+                        packet->data[1201] * pow(2, 8) +
+                        packet->data[1202] * pow(2, 16) + 
+                        packet->data[1203] * pow(2, 24)) * 1e3;
+
+
+        if (int(last_FPGA_ts - packet_timestamp) > 0)
+        {
+            GPS_ts = GPSStableTS;
+        }
+
+        last_FPGA_ts = packet_timestamp;
+	    // timeStamp = ros::Time(this->pointcloudTimeStamp+total_us/10e5);
+
+        timeStamp = ros::Time(GPS_ts, packet_timestamp);
+
+    }
+}
+
 } // namespace lslidar_driver
+}
+}

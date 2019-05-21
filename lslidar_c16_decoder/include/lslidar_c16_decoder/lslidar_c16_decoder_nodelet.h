@@ -19,7 +19,7 @@
 #define LSLIDAR_C16_DECODER_NODELET_H
 
 #include <ros/ros.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <nodelet/nodelet.h>
 
 #include <lslidar_c16_decoder/lslidar_c16_decoder.h>

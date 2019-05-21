@@ -17,7 +17,7 @@
 
 #include <lslidar_c16_compensator/compensator.h>
 #include <nodelet/nodelet.h>
-#include <pluginlib/class_list_macros.h>
+#include <pluginlib/class_list_macros.hpp>
 #include <ros/ros.h>
 
 namespace lslidar_c16_compensator {
@@ -40,5 +40,9 @@ void CompensatorNodelet::onInit() {
 
 } // end namespace lslidar_c16_decoder
 
-PLUGINLIB_DECLARE_CLASS(lslidar_c16_compensator, CompensatorNodelet,
-    lslidar_c16_compensator::CompensatorNodelet, nodelet::Nodelet);
+//Before:
+//PLUGINLIB_DECLARE_CLASS(lslidar_c16_compensator, CompensatorNodelet,
+//    lslidar_c16_compensator::CompensatorNodelet, nodelet::Nodelet);
+
+//After (David Portugal):
+PLUGINLIB_EXPORT_CLASS(lslidar_c16_compensator::CompensatorNodelet, nodelet::Nodelet);
