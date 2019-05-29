@@ -100,12 +100,6 @@ roslaunch lslidar_c16_decoder lslidar_c16.launch --screen
 Note that this launch file launches both the driver and the decoder, which is the only launch file needed to be used.
 
 
-## FAQ
-
-
-## Bug Report
-
-
 
 
 

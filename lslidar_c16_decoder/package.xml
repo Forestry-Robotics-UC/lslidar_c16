@@ -7,7 +7,7 @@
     Point cloud conversions for Leishen C16 LIDARs.
   </description>
   <maintainer email="jishu@lslidar.com">leo</maintainer>
-  <maintainer email="davidbsp@isr.uc.pt">leo</maintainer>
+  <maintainer email="davidbsp@isr.uc.pt">David Portugal</maintainer>
   <author>leo</author>
   <license>GNC General Public License V3.0</license>
 
