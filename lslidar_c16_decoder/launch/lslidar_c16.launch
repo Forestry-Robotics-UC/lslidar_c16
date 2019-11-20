@@ -2,7 +2,7 @@
 
   <node pkg="lslidar_c16_driver" type="lslidar_c16_driver_node" name="lslidar_c16_driver_node" output="screen">
     <param name="frame_id" value="lslidar_link"/>
-    <param name="device_ip" value="192.168.1.200"/>
+    <param name="device_ip" value="172.16.2.12"/>  <!--192.168.1.200: your PC ip must be manually set to 192.168.1.102-->
     <param name="device_port" value="2368"/>
   </node>
 
