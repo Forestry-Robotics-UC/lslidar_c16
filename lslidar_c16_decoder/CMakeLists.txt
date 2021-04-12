@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8.3)
 project(lslidar_c16_decoder)
 
 add_definitions(-std=c++0x)
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -42,6 +44,7 @@ add_library(lslidar_c16_decoder
 )
 target_link_libraries(lslidar_c16_decoder
   ${catkin_LIBRARIES}
+  ${PCL_LIBRARIES}
 )
 add_dependencies(lslidar_c16_decoder
   ${${PROJECT_NAME}_EXPORTED_TARGETS}
