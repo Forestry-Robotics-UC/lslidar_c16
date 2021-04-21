@@ -10,6 +10,10 @@ roslaunch lslidar_c16_decoder lslidar_c16.launch
 
 ## version track
 
+### ver1.3 David Portugal, University of Coimbra
+Changes in the pkg to support the migration to ROS Noetic
+C++14 was required for compilation on the lslidar_c16_decoder/CMakeLists.txt file
+
 ### ver1.2 David Portugal, University of Coimbra
 Changes in the pkg to support the migration to ROS Melodic (issue with the "pluginlib" solved)
 Requires "pluginlib" package in the workspace  (https://github.com/ros/pluginlib)
